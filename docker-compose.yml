@@ -1,24 +1,25 @@
 services:
-  mlflow-server:
-    image: ghcr.io/mlflow/mlflow:latest
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "8010:8010"
     volumes:
-      - ./mlruns:/mlflow/mlruns
-    command: >
-      mlflow server
-      --backend-store-uri sqlite:////mlflow/mlruns/mlflow.db
-      --default-artifact-root /mlflow/mlruns
-      --host 0.0.0.0
-      --port 5000
-
-  automl-api:
-    build: .
-    ports:
-      - "8000:8000"
+      # Data ko safe rakhne ke liye volumes (taaki container band hone par data na ude)
+      - ./mlflow.db:/app/mlflow.db
+      - ./mlruns:/app/mlruns
     environment:
-      - MLFLOW_TRACKING_URI=http://mlflow-server:5000
-    volumes:
-      - ./mlruns:/mlflow/mlruns
+      - MLFLOW_TRACKING_URI=sqlite:///mlflow.db
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    ports:
+      - "8501:8501"
+    environment:
+      # UI ko batayenge ki API 'api' naam ke container me chal rahi hai
+      - API_URL=http://api:8010
     depends_on:
-      - mlflow-server
+      - api

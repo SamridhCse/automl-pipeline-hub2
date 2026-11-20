@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 
 class TrainResponse(BaseModel):
     message: str
+    job_id: str           # <--- Naya field
     experiment_name: str
     registered_model_target: str
     n_trials: int

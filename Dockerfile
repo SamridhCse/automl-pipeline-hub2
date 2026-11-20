@@ -1,14 +1,25 @@
 FROM python:3.12-slim
 
-WORKDIR /code
+WORKDIR /app
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# Install system dependencies for LightGBM & XGBoost
+RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
 
+# Install uv (fast package manager)
+RUN pip install uv
+
+# Copy dependency files
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-cache
 
-COPY ./app /code/app
+# Install dependencies
+RUN uv sync --frozen --no-dev
 
-EXPOSE 8000
+# Copy application code
+COPY app ./app
+COPY src ./src
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose port
+EXPOSE 8010
+
+# Start FastAPI server
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8010"]
